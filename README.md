@@ -1,3 +1,5 @@
+Migrated from [this commit in MobX-State-Tree](https://github.com/mobxjs/mobx-state-tree/tree/9f30ab82df47d49200f512aee4839892473e407a/packages/mst-middlewares) in the [work to undo the monorepo set up for MST](https://github.com/mobxjs/mobx-state-tree/milestone/4).
+
 # Prebuilt middlewares
 
 The MST package ships with some prebuilt middlewares, which serves mainly as examples on how to write your own middleware.
@@ -6,7 +8,7 @@ The source of each middleware can be found in this github directory, you are enc
 The middlewares are bundled separately to keep the core package small, and can be included using:
 
 ```javascript
-import { MiddlewareName } from "mst-middlewares"
+import { MiddlewareName } from "mst-middlewares";
 ```
 
 The middlewares serve as example and are supported on a best effort bases. The goal of these middlewares is that if they are critical to your system, you can simply copy paste them and further tailor them towards your specific needs.
@@ -26,17 +28,17 @@ Any additional test for your middleware should be written inside the test folder
 This is the most basic of middlewares: It logs all _direct_ action invocations. Example:
 
 ```javascript
-import { simpleActionLogger } from "mst-middlewares"
+import { simpleActionLogger } from "mst-middlewares";
 
 // .. type definitions ...
 
 const store = Store.create({
-    todos: [{ title: "test " }]
-})
+  todos: [{ title: "test " }],
+});
 
-mst.addMiddleware(store, simpleActionLogger)
+mst.addMiddleware(store, simpleActionLogger);
 
-store.todos[0].setTitle("hello world")
+store.todos[0].setTitle("hello world");
 
 // Prints:
 // [MST] /todos/0/setTitle
@@ -51,17 +53,17 @@ For a more sophisticated logger, see [action-logger](#action-logger) which also 
 This is a little more sophisticated middlewares: It logs all _direct_ action invocations and also every flow that spawns, returns or throws. Example:
 
 ```javascript
-import { actionLogger } from "mst-middlewares"
+import { actionLogger } from "mst-middlewares";
 
 // .. type definitions ...
 
 const store = Store.create({
-    todos: [{ title: "test " }]
-})
+  todos: [{ title: "test " }],
+});
 
-mst.addMiddleware(store, actionLogger)
+mst.addMiddleware(store, actionLogger);
 
-store.todos[0].setTitle("hello world")
+store.todos[0].setTitle("hello world");
 ```
 
 This will print something like `[MST] <root action id> <action type> - <path to action>
@@ -88,48 +90,48 @@ The exception itself is not eaten, but any modifications that are made during th
 Example:
 
 ```javascript
-import { types, addMiddleware, flow } from "mobx-state-tree"
-import { atomic } from "mst-middlewares"
+import { types, addMiddleware, flow } from "mobx-state-tree";
+import { atomic } from "mst-middlewares";
 
 const TestModel = types
-    .model({
-        z: 1
-    })
-    // example with addMiddleware
-    .actions((self) => {
-        addMiddleware(self, atomic)
+  .model({
+    z: 1,
+  })
+  // example with addMiddleware
+  .actions((self) => {
+    addMiddleware(self, atomic);
 
-        return {
-            inc: flow(function* (x) {
-                yield delay(2)
-                self.z += x
-                yield delay(2)
-                self.z += x
-                throw "Oops"
-            })
-        }
-    })
-    // example with decorate
-    .actions((self) => {
-        return {
-            inc: decorate(
-                atomic,
-                flow(function* (x) {
-                    yield delay(2)
-                    self.z += x
-                    yield delay(2)
-                    self.z += x
-                    throw "Oops"
-                })
-            )
-        }
-    })
+    return {
+      inc: flow(function* (x) {
+        yield delay(2);
+        self.z += x;
+        yield delay(2);
+        self.z += x;
+        throw "Oops";
+      }),
+    };
+  })
+  // example with decorate
+  .actions((self) => {
+    return {
+      inc: decorate(
+        atomic,
+        flow(function* (x) {
+          yield delay(2);
+          self.z += x;
+          yield delay(2);
+          self.z += x;
+          throw "Oops";
+        })
+      ),
+    };
+  });
 
-const m = TestModel.create()
+const m = TestModel.create();
 m.inc(3).catch((error) => {
-    t.is(error, "Oops")
-    t.is(m.z, 1) // Not 7! The change was rolled back
-})
+  t.is(error, "Oops");
+  t.is(m.z, 1); // Not 7! The change was rolled back
+});
 ```
 
 ---
@@ -139,28 +141,28 @@ m.inc(3).catch((error) => {
 This built in model can be used as stand alone store or as part of your state tree and adds time travelling capabilities.
 It records all emitted snapshots by a tree and exposes the following methods / views:
 
--   `canUndo: boolean`
--   `canRedo: boolean`
--   `undo()`
--   `redo()`
--   `history`: array with all recorded states
+- `canUndo: boolean`
+- `canRedo: boolean`
+- `undo()`
+- `redo()`
+- `history`: array with all recorded states
 
 The state of the TimeTraveller itself is stored in a Mobx state tree, meaning that you can freely snapshot your state including its history. This means that it is possible to store your app state including the undo stack in for example local storage. (but beware that stringify-ing will not benefit from structural sharing).
 
 Usage inside a state tree:
 
 ```javascript
-import { TimeTraveller } from "mst-middlewares"
+import { TimeTraveller } from "mst-middlewares";
 
 export const Store = types.model({
-    todos: types.array(Todo),
-    history: types.optional(TimeTraveller, { targetPath: "../todos" })
-})
+  todos: types.array(Todo),
+  history: types.optional(TimeTraveller, { targetPath: "../todos" }),
+});
 
-const store = Store.create()
+const store = Store.create();
 
 // later:
-if (store.history.canUndo) store.history.undo()
+if (store.history.canUndo) store.history.undo();
 // etc
 ```
 
@@ -169,17 +171,17 @@ Note that the `targetPath` is a path relative to the `TimeTraveller` instance th
 To instantiate the `TimeTraveller` as a stand-alone state tree, pass in the the store through context:
 
 ```javascript
-import { TimeTraveller } from "mst-middlewares"
+import { TimeTraveller } from "mst-middlewares";
 
 export const Store = types.model({
-    todos: types.array(Todo)
-})
+  todos: types.array(Todo),
+});
 
-const store = Store.create()
-const timeTraveller = TimeTraveller.create({}, { targetStore: store })
+const store = Store.create();
+const timeTraveller = TimeTraveller.create({}, { targetStore: store });
 
 // later:
-if (timeTraveller.canUndo) timeTraveller.undo()
+if (timeTraveller.canUndo) timeTraveller.undo();
 // etc
 ```
 
@@ -205,18 +207,18 @@ Differences to the `TimeTraveller`:
 
 API:
 
--   `history: { patches: [], inversePatches [] }[]`
--   `canUndo: boolean` true if there is at least one undo level available
--   `canRedo: boolean` true if there is at least one redo level available
--   `undoLevels: number` number of undo levels available
--   `redoLevels: number` number of redo levels available
--   `undo()` undo the last operation
--   `redo()` redo the last operation
--   `withoutUndo(() => fn)` patches for actions / processes within the fn are not recorded.
--   `withoutUndoFlow(fn*)` patches the fn\* are not recorded.
--   `startGroup(() => fn)` can be used to start a group, all patches within a group are saved as one history entry.
--   `stopGroup()` can be used to stop the recording of patches for the grouped history entry.
--   `clear({ undo?: true, redo: true }?)` clear the history.
+- `history: { patches: [], inversePatches [] }[]`
+- `canUndo: boolean` true if there is at least one undo level available
+- `canRedo: boolean` true if there is at least one redo level available
+- `undoLevels: number` number of undo levels available
+- `redoLevels: number` number of redo levels available
+- `undo()` undo the last operation
+- `redo()` redo the last operation
+- `withoutUndo(() => fn)` patches for actions / processes within the fn are not recorded.
+- `withoutUndoFlow(fn*)` patches the fn\* are not recorded.
+- `startGroup(() => fn)` can be used to start a group, all patches within a group are saved as one history entry.
+- `stopGroup()` can be used to stop the recording of patches for the grouped history entry.
+- `clear({ undo?: true, redo: true }?)` clear the history.
 
 Setup and API usage examples:
 
@@ -226,113 +228,113 @@ The `UndoManager` automatically records all the actions within the tree it is at
 If you want the history to be a part of your store:
 
 ```javascript
-import { UndoManager } from "mst-middlewares"
+import { UndoManager } from "mst-middlewares";
 
 export const Store = types
-    .model({
-        todos: types.array(Todo),
-        history: types.optional(UndoManager, {})
-    })
-    .actions((self) => {
-        // you could create your undoManger anywhere but before your first needed action within the undoManager
-        setUndoManager(self)
+  .model({
+    todos: types.array(Todo),
+    history: types.optional(UndoManager, {}),
+  })
+  .actions((self) => {
+    // you could create your undoManger anywhere but before your first needed action within the undoManager
+    setUndoManager(self);
 
-        return {
-            addTodo(todo) {
-                self.todos.push(todo)
-            }
-            // to use the undoManager to wrap the afterCreate action
-            // of the StoreModel it's necessary to set it within the store model like above
-            // afterCreate: () => undoManager.withoutUndo(() => { action() })
-        }
-    })
+    return {
+      addTodo(todo) {
+        self.todos.push(todo);
+      },
+      // to use the undoManager to wrap the afterCreate action
+      // of the StoreModel it's necessary to set it within the store model like above
+      // afterCreate: () => undoManager.withoutUndo(() => { action() })
+    };
+  });
 
-export let undoManager = {}
+export let undoManager = {};
 export const setUndoManager = (targetStore) => {
-    undoManager = targetStore.history
-}
-const store = Store.create()
+  undoManager = targetStore.history;
+};
+const store = Store.create();
 ```
 
 To record the changes into a separate tree:
 
 ```javascript
-import { UndoManager } from "mst-middlewares"
+import { UndoManager } from "mst-middlewares";
 
 export const Store = types
-    .model({
-        todos: types.array(Todo)
-    })
-    .actions((self) => {
-        // you could create your undoManger anywhere but before your first needed action within the undoManager
-        setUndoManager(self)
+  .model({
+    todos: types.array(Todo),
+  })
+  .actions((self) => {
+    // you could create your undoManger anywhere but before your first needed action within the undoManager
+    setUndoManager(self);
 
-        return {
-            addTodo(todo) {
-                self.todos.push(todo)
-            }
-            // to use the undoManager to wrap the afterCreate action
-            // of the StoreModel it's necessary to set it within the store model like above
-            // afterCreate: () => undoManager.withoutUndo(() => { action() })
-        }
-    })
+    return {
+      addTodo(todo) {
+        self.todos.push(todo);
+      },
+      // to use the undoManager to wrap the afterCreate action
+      // of the StoreModel it's necessary to set it within the store model like above
+      // afterCreate: () => undoManager.withoutUndo(() => { action() })
+    };
+  });
 
-export let undoManager = {}
+export let undoManager = {};
 export const setUndoManager = (targetStore) => {
-    undoManager = UndoManager.create({}, { targetStore })
-}
-const store = Store.create()
+  undoManager = UndoManager.create({}, { targetStore });
+};
+const store = Store.create();
 ```
 
 If you want a limited history of actions to be recorded, for example to keep track of the last 10 actions only, you must provide a `maxHistoryLength` value through [environment data](../../README.md#dependency-injection).
 
 ```js
 // with history in your store
-const store = Store.create({}, { maxHistoryLength: 10 })
+const store = Store.create({}, { maxHistoryLength: 10 });
 
 // with history in a separate store
 export const setUndoManager = (targetStore) => {
-    undoManager = UndoManager.create({}, { targetStore, maxHistoryLength: 10 })
-}
+  undoManager = UndoManager.create({}, { targetStore, maxHistoryLength: 10 });
+};
 ```
 
 If you want to record changes in lifecycle hooks as well, you must provide an `includeHooks` flag:
 
 ```js
-import { UndoManager } from "mst-middlewares"
+import { UndoManager } from "mst-middlewares";
 
 export const Store = types
-    .model({
-        todos: types.array(Todo)
-    })
-    .actions((self) => {
-        setUndoManager(self)
+  .model({
+    todos: types.array(Todo),
+  })
+  .actions((self) => {
+    setUndoManager(self);
 
-        return {
-            afterCreate() {
-                self.todos.push({ title: "New Todo" })
-            },
-            addTodo(todo) {
-                self.todos.push(todo)
-            }
-        }
-    })
+    return {
+      afterCreate() {
+        self.todos.push({ title: "New Todo" });
+      },
+      addTodo(todo) {
+        self.todos.push(todo);
+      },
+    };
+  });
 
-export let undoManager = {}
+export let undoManager = {};
 export const setUndoManager = (targetStore) => {
-    undoManager = UndoManager.create({}, { targetStore, includeHooks: true })
-}
-const store = Store.create()
+  undoManager = UndoManager.create({}, { targetStore, includeHooks: true });
+};
+const store = Store.create();
 ```
 
 Undo/ Redo:
 
 ```js
-import { undoManager } from "../Store"
+import { undoManager } from "../Store";
 
 // if the undoManger is created within another tree
-const undo = () => undoManager.canUndo && undoManager.undo()
-const redo = () => undoManager.canRedo && undoManager.redo()
+const undo = () => undoManager.canUndo && undoManager.undo();
+const redo = () => undoManager.canRedo && undoManager.redo();
 ```
 
 WithoutUndo - within a react component:
@@ -361,44 +363,44 @@ render() {
 WithoutUndo - declarative:
 
 ```javascript
-import { types } from "mobx-state-tree"
-import { UndoManager } from "mst-middlewares"
+import { types } from "mobx-state-tree";
+import { UndoManager } from "mst-middlewares";
 
 const PersonModel = types
-    .model("PersonModel", {
-        firstName: types.string,
-        lastName: types.string
-    })
-    .actions((self) => {
-        return {
-            // setPersonName won't be recorded anymore in general
-            setPersonName: (firstName, lastName) =>
-                undoManager.withoutUndo(() => {
-                    self.firstName = firstName
-                    self.lastName = lastName
-                })
-        }
-    })
+  .model("PersonModel", {
+    firstName: types.string,
+    lastName: types.string,
+  })
+  .actions((self) => {
+    return {
+      // setPersonName won't be recorded anymore in general
+      setPersonName: (firstName, lastName) =>
+        undoManager.withoutUndo(() => {
+          self.firstName = firstName;
+          self.lastName = lastName;
+        }),
+    };
+  });
 
 const StoreModel = types
-    .model("StoreModel", {
-        persons: types.map(PersonModel)
-    })
-    .actions((self) => {
-        setUndoManager(self)
+  .model("StoreModel", {
+    persons: types.map(PersonModel),
+  })
+  .actions((self) => {
+    setUndoManager(self);
 
-        return {
-            addPerson(firstName, lastName) {
-                persons.put({ firstName, lastName })
-            }
-        }
-    })
+    return {
+      addPerson(firstName, lastName) {
+        persons.put({ firstName, lastName });
+      },
+    };
+  });
 
-export let undoManager = {}
+export let undoManager = {};
 export const setUndoManager = (targetStore) => {
-    undoManager = UndoManager.create({}, { targetStore })
-}
-export const Store = StoreModel.create({})
+  undoManager = UndoManager.create({}, { targetStore });
+};
+export const Store = StoreModel.create({});
 ```
 
 WithoutUndoFlow - declarative:
@@ -473,6 +475,6 @@ See the [redux-todomvc example](https://github.com/coolsoftwaretyler/mst-example
 
 The options object is optional and has the following options:
 
--   `logIdempotentActionSteps`: `true` by default due to possible performance penalty because of the internal usage of onPatch. When set to `false` it will skip reporting of actions and flow action "steps" that do not end up in an actual change in the model (except when an error is thrown), thus reducing the amount of noise in the logs.
--   `logChildActions`: `false` by default. When set to `true` it will report actions that are executed inside a root actions. When set to `false` it will not.
--   `logArgsNearName`: `true` by default. When `true` it will log the arguments near the action name (truncated if too long), when `false` it won't.
+- `logIdempotentActionSteps`: `true` by default due to possible performance penalty because of the internal usage of onPatch. When set to `false` it will skip reporting of actions and flow action "steps" that do not end up in an actual change in the model (except when an error is thrown), thus reducing the amount of noise in the logs.
+- `logChildActions`: `false` by default. When set to `true` it will report actions that are executed inside a root actions. When set to `false` it will not.
+- `logArgsNearName`: `true` by default. When `true` it will log the arguments near the action name (truncated if too long), when `false` it won't.
