@@ -1,7 +1,29 @@
 {
-    "extends": "../../tsconfig.base.json",
-    "compilerOptions": {
-        "outDir": "lib/"
-    },
-    "files": ["src/index.ts"]
+  "files": ["src/index.ts"],
+  "compilerOptions": {
+    "target": "es5",
+    "sourceMap": false,
+    "declaration": true,
+    "module": "es2015",
+    "removeComments": false,
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitAny": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "importHelpers": true,
+    "stripInternal": true,
+    "downlevelIteration": true,
+    "lib": ["es6"],
+    "useDefineForClassFields": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "outDir": "lib"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/__tests__/*"]
 }
