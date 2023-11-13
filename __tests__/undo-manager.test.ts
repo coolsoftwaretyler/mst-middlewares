@@ -154,7 +154,7 @@ test("can time travel with Mutable object", () => {
             setUndoManagerDifferentTree(self)
             return {
                 setProp(k: string, v: any) {
-                    ;(self.mutable as any).set(k, v)
+                    ; (self.mutable as any).set(k, v)
                 }
             }
         })
@@ -567,4 +567,32 @@ describe("includeHooks flag", () => {
             }
         ])
     })
+})
+
+test("#15 - rollback by recorder.undo() should not be an UndoState", () => {
+    let _undoManager: any
+    const Model = types
+        .model('Model', {
+            value: 1,
+        })
+        .actions(self => {
+            _undoManager = UndoManager.create({}, { targetStore: self })
+            function setValue(value: number) {
+                self.value = value;
+                throw 'some error throw by actions'
+            }
+            return {
+                setValue,
+            }
+        })
+
+    const model = Model.create({})
+    try {
+        model.setValue(2)
+    } catch (e) {
+        expect(e).toBe('some error throw by actions')
+    }
+    // rollback successfully and no UndoState
+    expect(model.value).toBe(1)
+    expect(_undoManager.history).toHaveLength(0)
 })

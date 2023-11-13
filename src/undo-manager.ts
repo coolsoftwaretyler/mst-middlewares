@@ -85,10 +85,10 @@ const UndoManager = types
             },
             onFinish(call, error) {
                 const recorder = call.env!.recorder
-                call.env = undefined
                 recorder.stop()
-
                 if (error === undefined) {
+                    // if no errors from the action, we can safely clean up call.env before proceeding further
+                    call.env = undefined 
                     if (groupRecorders.length > 0) {
                         const groupRecorder = groupRecorders[groupRecorders.length - 1]
                         groupRecorder.patches = groupRecorder.patches.concat(recorder.patches)
@@ -99,7 +99,9 @@ const UndoManager = types
                         ;(self as any).addUndoState(recorder)
                     }
                 } else {
+                    // if there was an error, we need call.env to filtered action from `recorder.undo -> applyPatch`, so we clean up call.env afterwards
                     recorder.undo()
+                    call.env = undefined
                 }
             }
         })
