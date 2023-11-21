@@ -1,5 +1,5 @@
 import { UndoManager } from "../src"
-import { types, clone, getSnapshot, flow, Instance } from "mobx-state-tree"
+import { types, clone, getSnapshot, flow, Instance, destroy } from "mobx-state-tree"
 import { configure } from "mobx"
 
 let undoManager: any = {}
@@ -595,4 +595,90 @@ test("#15 - rollback by recorder.undo() should not be an UndoState", () => {
     // rollback successfully and no UndoState
     expect(model.value).toBe(1)
     expect(_undoManager.history).toHaveLength(0)
+})
+
+test('#4 - should not saves patches from non-targeted store', () => {
+    let UID = 1;
+    const Box = types
+        .model("Box", {
+            id: types.optional(types.identifier, ''),
+        })
+
+    const BoxStore = types
+        .model("BoxStore", {
+            boxes: types.array(Box)
+        })
+        .actions((self) => ({
+            afterCreate() {
+                setUndoManager(self);
+            },
+            addRandomBox() {
+                const randomBox = Box.create({ id: `box-${UID++}` })
+                self.boxes.push(randomBox)
+                return randomBox;
+            },
+            remove(box: any) {
+                destroy(box)
+            }
+        }))
+
+    const Focus = types
+        .model("Focus", {
+            focusedBoxes: types.array(types.safeReference(Box))
+        })
+        .actions(self => ({
+            toggleBoxFocus(box: any) {
+                if (self.focusedBoxes.includes(box)) {
+                    self.focusedBoxes.remove(box)
+                } else {
+                    self.focusedBoxes.push(box)
+                }
+            }
+        }))
+
+    const RootStore = types
+        .model("RootStore", {
+            boxStore: BoxStore,
+            focus: Focus,
+        })
+
+    const store = RootStore.create({
+        boxStore: { boxes: [] },
+        focus: { focusedBoxes: [] }
+    });
+
+    let _undoManager: any = null
+    const setUndoManager = (targetStore: any) => {
+        _undoManager = UndoManager.create({}, { targetStore })
+    };
+
+    const box = store.boxStore.addRandomBox()
+    store.focus.toggleBoxFocus(box)
+
+    // don't record `focusedBoxes.push(box)`
+    expect(getSnapshot(_undoManager)).toEqual({
+        history: [
+            {
+                patches: [{ op: "add", path: "/boxStore/boxes/0", value: { id: "box-1" } }],
+                inversePatches: [{ op: "remove", path: "/boxStore/boxes/0" }]
+            }
+        ],
+        undoIdx: 1
+    });
+
+    store.boxStore.remove(box)
+    // don't record safeReference's side effect : `focusedBoxes.remove(box)`
+    expect(getSnapshot(_undoManager)).toEqual({
+        history: [
+            {
+                patches: [{ op: "add", path: "/boxStore/boxes/0", value: { id: "box-1" } }],
+                inversePatches: [{ op: "remove", path: "/boxStore/boxes/0" }]
+            },
+            {
+                patches: [{ op: "remove", path: "/boxStore/boxes/0" }],
+                inversePatches: [{ op: "add", path: "/boxStore/boxes/0", value: { id: "box-1" } }]
+            }
+        ],
+        undoIdx: 2
+    });
 })
